@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const multer = require('multer');
 const db = require('../config/database');
+const logger = require('../config/logger');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const {
   createCampaignWallet,
@@ -529,7 +530,7 @@ router.post('/:id/trigger-refunds', requireAuth, requireRole('admin'), async (re
     res.status(201).json({ refundsCreated: created.length, refunds: created });
   } catch (err) {
     await client.query('ROLLBACK');
-    console.error('[campaigns] Refund trigger failed:', err.message);
+    logger.error('Refund trigger failed', { campaign_id: campaignId, error: err.message });
     res.status(500).json({ error: 'Could not trigger refunds for campaign' });
   } finally {
     client.release();
@@ -794,7 +795,10 @@ router.post('/:id/members', requireAuth, requireCampaignMember('owner'), async (
       text: `You have been invited to join a campaign as a ${role}. Click here to accept: ${campaignUrl}`,
     });
   } catch (e) {
-    console.error('Failed to send invite email', e);
+    logger.error('Failed to send invite email', {
+      campaign_id: req.params.id,
+      error: e.message || String(e),
+    });
   }
 
   res.status(201).json(memberRows[0]);

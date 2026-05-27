@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const db = require('../config/database');
-const { requireAuth, requireRole } = require('../middleware/auth');
 const logger = require('../config/logger');
+const { requireAuth, requireRole } = require('../middleware/auth');
 const { sendAlert } = require('../services/alerting');
 const { withdrawalValidation, validateRequest } = require('../middleware/validation');
 const {
@@ -455,7 +455,7 @@ const platformApproveHandler = async (req, res) => {
             withdrawal: { ...withdrawalRow, tx_hash: txHash },
           });
         })
-        .catch((e) => console.error('[withdrawals] webhook:', e.message));
+        .catch((e) => logger.error('Withdrawal webhook emit failed', { error: e.message }));
     });
     res.json(updated[0]);
   } catch (err) {

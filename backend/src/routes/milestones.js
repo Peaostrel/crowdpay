@@ -468,7 +468,7 @@ router.post('/:id/approve', requireAuth, async (req, res) => {
         campaign_id: milestone.campaign_id,
         withdrawal_request_id: withdrawalRequest.id,
         tx_hash: txHash,
-      }).catch((e) => console.error('[milestones] webhook:', e.message));
+      }).catch((e) => logger.error('Milestone webhook emit failed', { error: e.message }));
     });
 
     res.json({
