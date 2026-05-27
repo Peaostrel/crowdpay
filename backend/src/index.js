@@ -7,6 +7,7 @@ const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const logger = require('./config/logger');
 const { requestIdMiddleware } = require('./middleware/requestId');
+const { requestLogger } = require('./middleware/requestLogger');
 const { normalizeErrorResponse, errorHandler } = require('./middleware/errorHandler');
 const { startLedgerMonitor, getLedgerStreamHealth } = require('./services/ledgerMonitor');
 const { sendAlert } = require('./services/alerting');
@@ -23,6 +24,7 @@ app.use(cors({
 app.use(express.json({ limit: '50kb' }));
 app.use(cookieParser());
 app.use(requestIdMiddleware);
+app.use(requestLogger);
 app.use(normalizeErrorResponse);
 
 const openApiSpec = swaggerJsdoc({
