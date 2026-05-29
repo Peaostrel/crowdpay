@@ -5,7 +5,7 @@ const { createKycSession, isKycRequiredForCampaigns } = require('../services/kyc
 
 router.get('/me', requireAuth, async (req, res) => {
   const { rows } = await db.query(
-    `SELECT id, email, name, wallet_public_key, role, kyc_status, kyc_completed_at, created_at
+    `SELECT id, email, name, wallet_public_key, wallet_type, role, kyc_status, kyc_completed_at, created_at
      FROM users
      WHERE id = $1`,
     [req.user.userId]
