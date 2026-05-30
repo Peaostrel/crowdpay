@@ -24,6 +24,7 @@ const {
   submitCustodialContribution,
 } = require('../services/contributionService');
 const { listUserContributions } = require('../services/userDashboardService');
+const asyncHandler = require('../utils/asyncHandler');
 
 const SUPPORTED_ASSETS = getSupportedAssetCodes();
 const PREPARED_CONTRIBUTION_EXPIRES_IN = '10m';
@@ -113,14 +114,14 @@ function validateSubmittedContributionXdr({ signedXdr, unsignedXdr, senderPublic
   }
 }
 
-router.get('/mine', requireAuth, async (req, res) => {
+router.get('/mine', requireAuth, asyncHandler(async (req, res) => {
   const rows = await listUserContributions(req.user.userId);
   if (rows === null) return res.status(404).json({ error: 'User not found' });
   res.json(rows);
-});
+}));
 
 // Get contributions for a campaign
-router.get('/campaign/:campaignId', async (req, res) => {
+router.get('/campaign/:campaignId', asyncHandler(async (req, res) => {
   const { rows } = await db.query(
     `SELECT c.id, c.sender_public_key, c.amount, c.asset, c.payment_type,
             c.anchor_id, c.anchor_transaction_id, c.anchor_asset, c.anchor_amount,
@@ -140,17 +141,17 @@ router.get('/campaign/:campaignId', async (req, res) => {
     [req.params.campaignId]
   );
   res.json(rows);
-});
+}));
 
 // List contributions for the authenticated user (alias for /api/contributions/mine)
-router.get('/', requireAuth, async (req, res) => {
+router.get('/', requireAuth, asyncHandler(async (req, res) => {
   const rows = await listUserContributions(req.user.userId);
   if (rows === null) return res.status(404).json({ error: 'User not found' });
   res.json(rows);
-});
+}));
 
 // Trace contribution settlement by Stellar tx hash (submitted vs indexed on ledger)
-router.get('/finalization/:txHash', requireAuth, async (req, res) => {
+router.get('/finalization/:txHash', requireAuth, asyncHandler(async (req, res) => {
   const txHash = req.params.txHash;
   const { rows } = await db.query(
     `SELECT st.id, st.status, st.tx_hash, st.campaign_id, st.contribution_id,
@@ -202,10 +203,10 @@ router.get('/finalization/:txHash', requireAuth, async (req, res) => {
     metadata: row.metadata,
     updated_at: row.updated_at,
   });
-});
+}));
 
 // Quote conversion before a path payment contribution
-router.get('/quote', requireAuth, contributionQuoteValidation, validateRequest, async (req, res) => {
+router.get('/quote', requireAuth, contributionQuoteValidation, validateRequest, asyncHandler(async (req, res) => {
   /**
    * @openapi
    * /api/contributions/quote:
@@ -279,9 +280,9 @@ router.get('/quote', requireAuth, contributionQuoteValidation, validateRequest, 
     path: bestPath.path,
     path_count: paths.length,
   });
-});
+}));
 
-router.post('/prepare', requireAuth, contributionValidation, validateRequest, async (req, res) => {
+router.post('/prepare', requireAuth, contributionValidation, validateRequest, asyncHandler(async (req, res) => {
   const { campaign_id, amount, send_asset, sender_public_key, display_name } = req.body;
   if (!sender_public_key) {
     return res.status(422).json({
@@ -375,9 +376,9 @@ router.post('/prepare', requireAuth, contributionValidation, validateRequest, as
       error: 'Could not prepare the Stellar transaction right now. Please try again.',
     });
   }
-});
+}));
 
-router.post('/submit-signed', requireAuth, async (req, res) => {
+router.post('/submit-signed', requireAuth, asyncHandler(async (req, res) => {
   const { signed_xdr, prepare_token } = req.body;
   if (!signed_xdr || !prepare_token) {
     return res.status(400).json({ error: 'signed_xdr and prepare_token are required' });
@@ -437,10 +438,10 @@ router.post('/submit-signed', requireAuth, async (req, res) => {
     message: 'Transaction submitted',
     conversion_quote: prepared.conversion_quote || null,
   });
-});
+}));
 
 // Contribute to a campaign (authenticated, custodial)
-router.post('/', contributionPostLimiter, requireAuth, contributionValidation, validateRequest, async (req, res) => {
+router.post('/', contributionPostLimiter, requireAuth, contributionValidation, validateRequest, asyncHandler(async (req, res) => {
   /**
    * @openapi
    * /api/contributions:
@@ -560,6 +561,6 @@ router.post('/', contributionPostLimiter, requireAuth, contributionValidation, v
       });
     }
   });
-});
+}));
 
 module.exports = router;
