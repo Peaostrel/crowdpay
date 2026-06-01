@@ -11,6 +11,7 @@ import CampaignDetailSkeleton from "../components/skeletons/CampaignDetailSkelet
 import ContributionListSkeleton from "../components/skeletons/ContributionListSkeleton";
 import VerificationBadge from "../components/VerificationBadge";
 import CampaignStatusBadge from "../components/CampaignStatusBadge";
+import { stellarExpertTxUrl } from "../config/stellar";
 import CampaignQRCode from "../components/CampaignQRCode";
 
 function escapeHtml(text) {
@@ -42,6 +43,86 @@ function progressColor(pct, status) {
   if (status === 'closed' || status === 'withdrawn') return '#6b7280'; // grey — ended
   if (pct >= 75) return '#3b82f6'; // blue — nearly there
   return '#7c3aed'; // default purple
+}
+
+function ContributionRow({ c }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(c.sender_public_key);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div style={styles.row}>
+      <div
+        style={{
+          minWidth: 0,
+          display: "flex",
+          alignItems: "center",
+          gap: "0.75rem",
+        }}
+      >
+        <div style={styles.avatar}>
+          {(c.display_name || "A")[0].toUpperCase()}
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <div style={styles.sender}>
+            {c.display_name || "Anonymous"}
+          </div>
+          <div style={styles.convHint}>
+            <button
+              type="button"
+              onClick={handleCopy}
+              title="Copy full public key"
+              style={{
+                background: "none",
+                border: "none",
+                color: "inherit",
+                fontFamily: "monospace",
+                fontSize: "inherit",
+                cursor: "pointer",
+                padding: 0,
+              }}
+            >
+              {c.sender_public_key.slice(0, 4)}…{c.sender_public_key.slice(-4)}
+            </button>
+            {" • "}
+            {new Date(c.created_at).toLocaleDateString(undefined, {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            })}
+          </div>
+          {c.refund_status && (
+            <div style={styles.refundTag}>
+              {c.refund_status === "pending" && "Refund pending"}
+              {c.refund_status === "submitted" && "Refunded"}
+              {c.refund_status === "indexed" && "Refunded"}
+              {c.refund_status === "failed" && "Refund failed"}
+              {c.refund_status === "denied" && "Refund denied"}
+            </div>
+          )}
+          {c.tx_hash && (
+            <a
+              href={stellarExpertTxUrl(c.tx_hash)}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ fontSize: '0.75rem', color: '#7c3aed', fontWeight: 600 }}
+            >
+              View on chain ↗
+            </a>
+          )}
+        </div>
+      </div>
+      {c.amount != null && (
+        <span style={styles.amount}>
+          {Number(c.amount).toLocaleString()} {c.asset}
+        </span>
+      )}
+    </div>
+  );
 }
 
 export default function Campaign() {
@@ -1280,44 +1361,7 @@ export default function Campaign() {
         <>
           <div style={styles.list}>
             {contributions.map((c) => (
-              <div key={c.id} style={styles.row}>
-                <div
-                  style={{
-                    minWidth: 0,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.75rem",
-                  }}
-                >
-                  <div style={styles.avatar}>
-                    {(c.display_name || "A")[0].toUpperCase()}
-                  </div>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={styles.sender}>
-                      {c.display_name || "Anonymous"}
-                    </div>
-                    <div style={styles.convHint}>
-                      {c.sender_public_key.slice(0, 4)}…
-                      {c.sender_public_key.slice(-4)} •{" "}
-                      {new Date(c.created_at).toLocaleDateString()}
-                    </div>
-                    {c.refund_status && (
-                      <div style={styles.refundTag}>
-                        {c.refund_status === "pending" && "Refund pending"}
-                        {c.refund_status === "submitted" && "Refunded"}
-                        {c.refund_status === "indexed" && "Refunded"}
-                        {c.refund_status === "failed" && "Refund failed"}
-                        {c.refund_status === "denied" && "Refund denied"}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                {c.amount != null && (
-                  <span style={styles.amount}>
-                    {Number(c.amount).toLocaleString()} {c.asset}
-                  </span>
-                )}
-              </div>
+              <ContributionRow key={c.id} c={c} />
             ))}
           </div>
           {totalContributions > 10 && (

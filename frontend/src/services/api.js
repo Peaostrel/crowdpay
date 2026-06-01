@@ -193,8 +193,9 @@ export const api = {
   getMyCampaigns: () => request('GET', '/campaigns/mine'),
   getMyStats: () => request('GET', '/users/me/stats'),
   getMyContributions: () => request('GET', '/contributions/mine'),
-  getMe: () => request('GET', '/users/me'),
-  startKyc: () => request('POST', '/users/me/kyc/start'),
+    getMe: () => request('GET', '/users/me'),
+    getMyBalance: () => request('GET', '/users/me/balance'),
+    startKyc: () => request('POST', '/users/me/kyc/start'),
 
   getCampaigns: (options = {}) => request('GET', '/campaigns', null, { query: options }),
   getCampaign: (id) => request('GET', `/campaigns/${id}`),

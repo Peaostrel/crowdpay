@@ -47,6 +47,9 @@ export default function CampaignCard({ campaign }) {
           <div style={styles.updates}>{campaign.updates_count} updates</div>
         )}
         <h3 style={styles.title}>{campaign.title}</h3>
+        {campaign.creator_name && (
+          <p style={styles.creator}>by {campaign.creator_name}</p>
+        )}
         <p style={styles.desc}>{campaign.description?.slice(0, 100)}{campaign.description?.length > 100 ? '…' : ''}</p>
         <div style={styles.bar}>
           <div style={{ ...styles.fill, background: fillColor, width: `${pct}%` }} />
@@ -74,6 +77,7 @@ const styles = {
   asset: { background: 'var(--color-accent-lightest)', color: 'var(--color-accent)', fontSize: '0.75rem', fontWeight: 700, padding: '2px 8px', borderRadius: '99px' },
   updates: { fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-success-text)', marginBottom: '0.45rem' },
   title: { fontSize: '1.05rem', fontWeight: 700, marginBottom: '0.4rem', color: 'var(--color-text-primary)' },
+  creator: { fontSize: '0.8rem', color: 'var(--color-text-hint)', marginBottom: '0.4rem' },
   desc: { fontSize: '0.875rem', color: 'var(--color-text-hint)', marginBottom: '1rem' },
   coverImageWrapper: { overflow: 'hidden', borderRadius: '12px 12px 0 0', marginBottom: '1rem', height: '160px' },
   coverImage: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' },

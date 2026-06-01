@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { api } from '../services/api';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -9,6 +10,17 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [balance, setBalance] = useState(null);
+  const [loadingBalance, setLoadingBalance] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    setLoadingBalance(true);
+    api.getMyBalance()
+      .then(({ balance }) => setBalance(balance))
+      .catch(() => {})
+      .finally(() => setLoadingBalance(false));
+  }, [user]);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -46,6 +58,15 @@ export default function Navbar() {
               {user.role === 'admin' && <Link to="/admin" style={styles.link} onClick={closeMenu}>Admin</Link>}
               <Link to="/developer" style={styles.link} onClick={closeMenu}>Developer</Link>
               <span style={styles.name}>{user.name}</span>
+              {loadingBalance ? (
+                <span style={styles.balanceLoading}>Loading…</span>
+              ) : balance ? (
+                <span style={styles.balance}>
+                  {balance.USDC ? `${Number(balance.USDC).toFixed(2)} USDC` : ''}
+                  {balance.USDC && balance.XLM ? ' · ' : ''}
+                  {balance.XLM ? `${Number(balance.XLM).toFixed(2)} XLM` : ''}
+                </span>
+              ) : null}
               <button
                 onClick={toggleTheme}
                 style={styles.themeToggle}
@@ -85,5 +106,7 @@ const styles = {
   logo: { fontWeight: 800, fontSize: '1.15rem', color: 'var(--color-accent)' },
   link: { color: 'var(--color-text-secondary)', fontWeight: 500, fontSize: '0.9rem' },
   name: { color: 'var(--color-text-secondary)', fontSize: '0.85rem', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+  balance: { color: 'var(--color-text-hint)', fontSize: '0.8rem', fontFamily: 'monospace' },
+  balanceLoading: { color: 'var(--color-text-muted)', fontSize: '0.8rem' },
   themeToggle: { background: 'transparent', border: 'none', fontSize: '1.2rem', cursor: 'pointer', padding: '0.4rem 0.6rem', borderRadius: '6px', transition: 'background 0.15s' },
 };

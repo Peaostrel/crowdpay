@@ -362,10 +362,11 @@ router.get('/:id', asyncHandler(async (req, res) => {
    *         description: Not found
    */
   const query = `
-    SELECT *,
+    SELECT c.*, u.name AS creator_name,
            (SELECT COUNT(DISTINCT sender_public_key)::int FROM contributions WHERE campaign_id = $1) AS contributor_count
-    FROM campaigns
-    WHERE id = $1
+    FROM campaigns c
+    JOIN users u ON u.id = c.creator_id
+    WHERE c.id = $1
   `;
   await refreshCampaignStatus(req.params.id);
   const { rows } = await db.query(query, [req.params.id]);
