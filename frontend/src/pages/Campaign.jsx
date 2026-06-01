@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -14,6 +14,7 @@ export default function Campaign() {
   const [contributions, setContributions] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [contributed, setContributed] = useState(false);
+  const contributeBtnRef = useRef(null);
   const [showCreatedBanner, setShowCreatedBanner] = useState(!!location.state?.created);
 
   useEffect(() => {
@@ -94,10 +95,26 @@ export default function Campaign() {
             <div style={styles.small}>funded</div>
           </div>
         </div>
-        <div style={styles.bar}><div style={{ ...styles.fill, width: `${pct}%` }} /></div>
+        <div
+          role="progressbar"
+          aria-valuenow={Number(pct)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`${pct}% of goal raised`}
+          style={styles.bar}
+        >
+          <div style={{ ...styles.fill, width: `${pct}%` }} aria-hidden="true" />
+        </div>
 
         {user ? (
-          <button type="button" className="btn-primary" style={styles.cta} onClick={() => setShowModal(true)}>
+          <button
+            type="button"
+            className="btn-primary"
+            style={styles.cta}
+            ref={contributeBtnRef}
+            aria-label={`Contribute to ${campaign.title}`}
+            onClick={() => setShowModal(true)}
+          >
             Contribute
           </button>
         ) : (
@@ -158,7 +175,10 @@ export default function Campaign() {
       {showModal && (
         <ContributeModal
           campaign={campaign}
-          onClose={() => setShowModal(false)}
+          onClose={() => {
+            setShowModal(false);
+            contributeBtnRef.current?.focus();
+          }}
           onSuccess={() => setContributed((v) => !v)}
         />
       )}

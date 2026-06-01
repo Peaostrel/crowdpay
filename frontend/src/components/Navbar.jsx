@@ -1,10 +1,11 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   function handleLogout() {
     logout();
@@ -14,20 +15,20 @@ export default function Navbar() {
   return (
     <nav style={styles.nav}>
       <div className="container nav-inner-wrap">
-        <Link to="/" style={styles.logo}>CrowdPay</Link>
+        <Link to="/" style={styles.logo} aria-label="CrowdPay home" aria-current={pathname === '/' ? 'page' : undefined}>CrowdPay</Link>
         <div className="nav-links">
           {user ? (
             <>
-              <Link to="/campaigns/new" style={styles.link}>Start Campaign</Link>
-              <span style={styles.name}>{user.name}</span>
+              <Link to="/campaigns/new" style={styles.link} aria-current={pathname === '/campaigns/new' ? 'page' : undefined}>Start Campaign</Link>
+              <span style={styles.name} aria-hidden="true">{user.name}</span>
               <button onClick={handleLogout} className="btn-secondary" style={{ padding: '0.4rem 0.9rem' }}>
                 Logout
               </button>
             </>
           ) : (
             <>
-              <Link to="/login" style={styles.link}>Log in</Link>
-              <Link to="/register">
+              <Link to="/login" style={styles.link} aria-current={pathname === '/login' ? 'page' : undefined}>Log in</Link>
+              <Link to="/register" aria-current={pathname === '/register' ? 'page' : undefined}>
                 <button className="btn-primary" style={{ padding: '0.4rem 0.9rem' }}>Sign up</button>
               </Link>
             </>

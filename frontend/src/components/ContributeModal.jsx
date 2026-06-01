@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { stellarExpertTxUrl } from '../config/stellar';
@@ -39,6 +39,8 @@ export default function ContributeModal({ campaign, onClose, onSuccess }) {
   const [quote, setQuote] = useState(null);
   const [phase, setPhase] = useState('form');
   const [result, setResult] = useState(null);
+
+  const modalRef = useRef(null);
 
   const isPathPayment = sendAsset !== campaign.asset_type;
   const destAmount = amount.trim();
@@ -89,6 +91,34 @@ export default function ContributeModal({ campaign, onClose, onSuccess }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
+  useEffect(() => {
+    const modal = modalRef.current;
+    if (!modal) return;
+    const focusable = modal.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    first?.focus();
+
+    function trapTab(e) {
+      if (e.key !== 'Tab') return;
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last?.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first?.focus();
+        }
+      }
+    }
+    modal.addEventListener('keydown', trapTab);
+    return () => modal.removeEventListener('keydown', trapTab);
+  }, [phase]);
+
   async function handleSubmit(e) {
     e.preventDefault();
     if (!destAmount || Number(destAmount) <= 0) {
@@ -120,6 +150,7 @@ export default function ContributeModal({ campaign, onClose, onSuccess }) {
     <div className="modal-overlay" style={styles.overlay} onClick={handleClose} role="presentation">
       <div
         className="modal-shell"
+        ref={modalRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="contribute-title"

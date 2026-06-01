@@ -118,11 +118,11 @@ export default function CreateCampaign() {
             color: '#666',
           }}
         >
-          <li>
+          <li aria-current={step === 1 ? 'step' : undefined}>
             <span style={{ color: step === 1 ? '#7c3aed' : '#999' }}>1. Goal & asset</span>
           </li>
           <li aria-hidden="true">→</li>
-          <li>
+          <li aria-current={step === 2 ? 'step' : undefined}>
             <span style={{ color: step === 2 ? '#7c3aed' : '#999' }}>2. Details & launch</span>
           </li>
         </ol>
@@ -159,6 +159,7 @@ export default function CreateCampaign() {
                 onChange={setField('title')}
                 placeholder="e.g. Community garden rebuild"
                 required
+                aria-required="true"
                 autoComplete="off"
               />
             </div>
@@ -177,6 +178,7 @@ export default function CreateCampaign() {
                 onChange={setField('target_amount')}
                 placeholder="0.00"
                 required
+                aria-required="true"
               />
             </div>
 

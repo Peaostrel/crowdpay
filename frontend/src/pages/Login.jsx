@@ -32,9 +32,15 @@ export default function Login() {
     <main className="container" style={{ paddingTop: '4rem', maxWidth: '400px' }}>
       <h1 style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: '1.5rem' }}>Log in</h1>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-        <input type="email" placeholder="Email" value={form.email} onChange={set('email')} required />
-        <input type="password" placeholder="Password" value={form.password} onChange={set('password')} required />
-        {error && <p style={{ color: '#dc2626', fontSize: '0.875rem' }}>{error}</p>}
+        <div className="form-stack">
+          <label className="label-strong" htmlFor="login-email">Email</label>
+          <input id="login-email" type="email" placeholder="you@example.com" value={form.email} onChange={set('email')} required aria-required="true" autoComplete="email" />
+        </div>
+        <div className="form-stack">
+          <label className="label-strong" htmlFor="login-password">Password</label>
+          <input id="login-password" type="password" placeholder="••••••••" value={form.password} onChange={set('password')} required aria-required="true" autoComplete="current-password" />
+        </div>
+        {error && <p role="alert" className="alert alert--error">{error}</p>}
         <button type="submit" className="btn-primary" disabled={loading} style={{ padding: '0.8rem' }}>
           {loading ? 'Logging in…' : 'Log in'}
         </button>

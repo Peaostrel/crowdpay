@@ -12,8 +12,15 @@ export default function CampaignCard({ campaign }) {
         </div>
         <h3 style={styles.title}>{campaign.title}</h3>
         <p style={styles.desc}>{campaign.description?.slice(0, 100)}{campaign.description?.length > 100 ? '…' : ''}</p>
-        <div style={styles.bar}>
-          <div style={{ ...styles.fill, width: `${pct}%` }} />
+        <div
+          role="progressbar"
+          aria-valuenow={Number(pct)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`${pct}% of goal funded`}
+          style={styles.bar}
+        >
+          <div style={{ ...styles.fill, width: `${pct}%` }} aria-hidden="true" />
         </div>
         <div style={styles.meta}>
           <span><strong>{Number(campaign.raised_amount).toLocaleString()}</strong> {campaign.asset_type} raised</span>

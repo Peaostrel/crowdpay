@@ -36,10 +36,19 @@ export default function Register() {
         A Stellar wallet is created for you automatically.
       </p>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-        <input placeholder="Full name" value={form.name} onChange={set('name')} required />
-        <input type="email" placeholder="Email" value={form.email} onChange={set('email')} required />
-        <input type="password" placeholder="Password" value={form.password} onChange={set('password')} required minLength={8} />
-        {error && <p style={{ color: '#dc2626', fontSize: '0.875rem' }}>{error}</p>}
+        <div className="form-stack">
+          <label className="label-strong" htmlFor="reg-name">Full name</label>
+          <input id="reg-name" placeholder="Jane Doe" value={form.name} onChange={set('name')} required aria-required="true" autoComplete="name" />
+        </div>
+        <div className="form-stack">
+          <label className="label-strong" htmlFor="reg-email">Email</label>
+          <input id="reg-email" type="email" placeholder="you@example.com" value={form.email} onChange={set('email')} required aria-required="true" autoComplete="email" />
+        </div>
+        <div className="form-stack">
+          <label className="label-strong" htmlFor="reg-password">Password</label>
+          <input id="reg-password" type="password" placeholder="At least 8 characters" value={form.password} onChange={set('password')} required aria-required="true" minLength={8} autoComplete="new-password" />
+        </div>
+        {error && <p role="alert" className="alert alert--error">{error}</p>}
         <button type="submit" className="btn-primary" disabled={loading} style={{ padding: '0.8rem' }}>
           {loading ? 'Creating account…' : 'Sign up'}
         </button>
