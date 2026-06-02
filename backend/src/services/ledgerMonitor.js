@@ -14,8 +14,12 @@ const { markContributionIndexed } = require("./stellarTransactionService");
 const { sendContributionReceipt } = require("./emailService");
 const {
   emitWebhookEventForUser,
+  emitWebhookEventForCampaign,
   WEBHOOK_EVENTS,
 } = require("./webhookDispatcher");
+const cache = require("../utils/cache");
+const { createNotification } = require("./notifications");
+const Sentry = require("@sentry/node");
 
 /** wallet_public_key -> stream metadata */
 const streamRegistry = new Map();
@@ -348,6 +352,12 @@ async function handlePayment(campaignId, walletPublicKey, payment) {
     } catch {
       // ignore rollback errors after failed work
     }
+    Sentry.withScope((scope) => {
+      scope.setTag("stellar.network", process.env.STELLAR_NETWORK);
+      scope.setExtra("tx_hash", txHash);
+      scope.setExtra("campaign_id", campaignId);
+      Sentry.captureException(err);
+    });
     logger.error("Failed to index contribution", {
       campaign_id: campaignId,
       tx_hash: txHash,
@@ -359,6 +369,11 @@ async function handlePayment(campaignId, walletPublicKey, payment) {
 
   if (postCommitHooks) {
     setImmediate(() => {
+      // Bust public caches — contribution changes raised_amount and contributor_count
+      cache.invalidate(`campaigns:id:${postCommitHooks.campaignId}`);
+      cache.invalidatePrefix('campaigns:list:');
+      cache.invalidatePrefix('stats:');
+
       sendContributionReceipt(postCommitHooks.receiptPayload).catch((e) =>
         logger.error("[receipt] Email failed", {
           campaign_id: postCommitHooks.campaignId,
@@ -367,12 +382,29 @@ async function handlePayment(campaignId, walletPublicKey, payment) {
         }),
       );
 
+      // User-level webhooks (legacy)
       emitWebhookEventForUser(
         postCommitHooks.creatorId,
         WEBHOOK_EVENTS.CONTRIBUTION_RECEIVED,
         postCommitHooks.contributionPayload,
       ).catch((e) =>
         logger.error("Contribution webhook emit failed", { error: e.message }),
+      );
+
+      // Campaign-level webhooks
+      emitWebhookEventForCampaign(
+        postCommitHooks.campaignId,
+        WEBHOOK_EVENTS.CONTRIBUTION_INDEXED,
+        {
+          campaign_id: postCommitHooks.campaignId,
+          tx_hash: postCommitHooks.receiptPayload.txHash,
+          amount: postCommitHooks.receiptPayload.amount,
+          asset: postCommitHooks.receiptPayload.asset,
+          sender: postCommitHooks.receiptPayload.senderPublicKey,
+          timestamp: new Date().toISOString(),
+        },
+      ).catch((e) =>
+        logger.error("Campaign contribution webhook emit failed", { error: e.message }),
       );
 
       if (postCommitHooks.fundedCampaign) {
@@ -383,9 +415,17 @@ async function handlePayment(campaignId, walletPublicKey, payment) {
         ).catch((e) =>
           logger.error("Funded webhook emit failed", { error: e.message }),
         );
+
+        createNotification(postCommitHooks.fundedCampaign.creator_id, {
+          type: 'goal_reached',
+          title: 'Goal reached!',
+          body: `Your campaign "${postCommitHooks.fundedCampaign.title}" has reached its funding goal.`,
+          link: `/campaigns/${postCommitHooks.campaignId}`,
+        }).catch(() => {});
       }
     });
   }
+}
 
   function scheduleStreamReconnect(campaignId, walletPublicKey, attempt) {
     const delay = Math.min(
@@ -644,4 +684,3 @@ async function handlePayment(campaignId, walletPublicKey, payment) {
     addSSEClient,
     removeSSEClient,
   };
-}
