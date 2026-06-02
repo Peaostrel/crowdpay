@@ -19,6 +19,17 @@ const SORT_OPTIONS = [
   { value: 'funded', label: 'Most funded' },
   { value: 'closest_to_goal', label: 'Closest to goal' },
 ];
+const CATEGORY_LABELS = {
+  technology: 'Technology',
+  community: 'Community',
+  arts: 'Arts & Culture',
+  education: 'Education',
+  environment: 'Environment',
+  health: 'Health',
+  business: 'Business',
+  open_source: 'Open Source',
+  other: 'Other',
+};
 const SEARCH_DEBOUNCE_MS = 450;
 
 export default function Home() {
@@ -35,6 +46,7 @@ export default function Home() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchInput, setSearchInput] = useState(() => searchParams.get('search') || '');
   const [sort, setSort] = useState(() => searchParams.get('sort') || 'newest');
+  const [categoryCounts, setCategoryCounts] = useState([]);
 
   const search = searchParams.get('search') || '';
   const status = searchParams.get('status') || '';
@@ -51,14 +63,17 @@ export default function Home() {
     setSort(newSort);
     setFilters({ sort: newSort });
   };
+  const category = searchParams.get('category') || '';
+  const sort = searchParams.get('sort') || 'newest';
 
   const hasActiveFilters =
-    Boolean(search.trim()) || Boolean(asset) || Boolean(status) || sort !== 'newest';
+    Boolean(search.trim()) || Boolean(asset) || Boolean(status) || Boolean(category) || sort !== 'newest';
 
   useEffect(() => {
     if (consumeJustRegistered()) {
       setWelcomeNewUser(true);
     }
+    api.getCampaignCategories().then(setCategoryCounts).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -77,7 +92,7 @@ export default function Home() {
     setListError('');
     setLoading(true);
     api
-      .getCampaigns({ search, status, asset, sort, limit: 20, offset: 0 })
+      .getCampaigns({ search, status, asset, category, sort, limit: 20, offset: 0 })
       .then((data) => {
         const nextCampaigns = data.campaigns || [];
         const nextTotal = data.total || 0;
@@ -88,7 +103,7 @@ export default function Home() {
       })
       .catch((err) => setListError(err.message || 'Could not load campaigns.'))
       .finally(() => setLoading(false));
-  }, [search, status, asset, sort]);
+  }, [search, status, asset, category, sort]);
 
   async function loadMore() {
     if (loadingMore || !hasMore) return;
@@ -99,6 +114,7 @@ export default function Home() {
         search,
         status,
         asset,
+        category,
         sort,
         limit: 20,
         offset: page * 20,
@@ -255,6 +271,26 @@ export default function Home() {
             ))}
           </select>
         </label>
+      </div>
+
+      <div style={styles.categoryBar}>
+        <button
+          type="button"
+          style={category === '' ? { ...styles.pill, ...styles.pillActive } : styles.pill}
+          onClick={() => setFilters({ category: '' })}
+        >
+          All
+        </button>
+        {categoryCounts.map((cat) => (
+          <button
+            key={cat.category}
+            type="button"
+            style={category === cat.category ? { ...styles.pill, ...styles.pillActive } : styles.pill}
+            onClick={() => setFilters({ category: cat.category })}
+          >
+            {CATEGORY_LABELS[cat.category] || cat.category} ({cat.count})
+          </button>
+        ))}
       </div>
 
       <h2 style={styles.sectionTitle}>Active campaigns</h2>
