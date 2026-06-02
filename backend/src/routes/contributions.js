@@ -472,6 +472,64 @@ router.post('/prepare', requireAuth, contributionValidation, validateRequest, as
       },
     });
   }
+// Quote conversion before a path payment contribution
+router.get(
+  "/quote",
+  requireAuth,
+  contributionQuoteValidation,
+  validateRequest,
+  asyncHandler(async (req, res) => {
+    /**
+     * @openapi
+     * /api/contributions/quote:
+     *   get:
+     *     tags: [Contributions]
+     *     summary: Get a DEX quote before submitting a conversion contribution
+     *     security:
+     *       - bearerAuth: []
+     *     parameters:
+     *       - in: query
+     *         name: send_asset
+     *         required: true
+     *         schema: { type: string }
+     *       - in: query
+     *         name: dest_asset
+     *         required: true
+     *         schema: { type: string }
+     *       - in: query
+     *         name: dest_amount
+     *         required: true
+     *         schema: { type: string }
+     *     responses:
+     *       200:
+     *         description: OK
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               required: [send_asset, dest_asset, dest_amount, quoted_source_amount, max_send_amount, estimated_rate, path, path_count]
+     *               properties:
+     *                 send_asset: { type: string }
+     *                 dest_asset: { type: string }
+     *                 dest_amount: { type: string }
+     *                 quoted_source_amount: { type: string }
+     *                 max_send_amount: { type: string }
+     *                 estimated_rate: { type: string }
+     *                 path: { type: array, items: { type: string } }
+     *                 path_count: { type: integer }
+     *       400:
+     *         description: Missing/invalid query params
+     *       404:
+     *         description: No path found
+     */
+    const { send_asset, dest_asset, dest_amount } = req.query;
+
+    const paths = await getPathPaymentQuote({
+      sendAsset: send_asset,
+      destAsset: dest_asset,
+      destAmount: dest_amount,
+    });
+  }
 
   const campaign = await loadActiveCampaign(campaign_id);
   if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
