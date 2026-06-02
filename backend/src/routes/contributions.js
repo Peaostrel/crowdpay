@@ -470,6 +470,8 @@ router.post('/prepare', requireAuth, contributionValidation, validateRequest, as
         message: 'sender_public_key must be a valid Stellar public key',
         fields: { sender_public_key: 'Invalid Stellar public key' },
       },
+    });
+  }
 // Quote conversion before a path payment contribution
 router.get(
   "/quote",
