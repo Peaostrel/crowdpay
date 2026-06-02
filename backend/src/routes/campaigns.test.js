@@ -396,6 +396,22 @@ test('POST /api/campaigns accepts valid category', async (t) => {
               asset_type: 'USDC',
               creator_id: 'creator-1',
               category: 'technology',
+test('GET /api/campaigns/:id/clone-data returns clone-ready details', async () => {
+  const app = buildApp({
+    queryImpl: async (text, params) => {
+      if (text.includes('FROM campaigns WHERE id = $1')) {
+        return {
+          rows: [
+            {
+              id: 'c-1',
+              title: 'Original Campaign',
+              description: 'My description',
+              target_amount: '100.0000000',
+              asset_type: 'USDC',
+              min_contribution: '5.0000000',
+              max_contribution: '50.0000000',
+              show_backer_amounts: true,
+              deleted_at: null,
             },
           ],
         };
@@ -443,5 +459,32 @@ test('POST /api/campaigns rejects invalid category', async (t) => {
   assert.equal(response.status, 400);
   assert.ok(response.body.errors);
   assert.ok(response.body.errors.some(e => e.msg && e.msg.includes('category must be one of')));
+  });
+
+  const response = await request(app)
+    .get('/api/campaigns/c-1/clone-data')
+    .set('Authorization', 'Bearer token');
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.title, 'Original Campaign (copy)');
+  assert.equal(response.body.description, 'My description');
+  assert.equal(response.body.target_amount, '100.0000000');
+  assert.equal(response.body.asset_type, 'USDC');
+  assert.equal(response.body.min_contribution, '5.0000000');
+  assert.equal(response.body.max_contribution, '50.0000000');
+  assert.equal(response.body.show_backer_amounts, true);
+  assert.equal(response.body.deadline, undefined);
+});
+
+test('GET /api/campaigns/:id/clone-data returns 404 for missing campaign', async () => {
+  const app = buildApp({
+    queryImpl: async () => ({ rows: [] }),
+  });
+
+  const response = await request(app)
+    .get('/api/campaigns/c-none/clone-data')
+    .set('Authorization', 'Bearer token');
+
+  assert.equal(response.status, 404);
 });
 
