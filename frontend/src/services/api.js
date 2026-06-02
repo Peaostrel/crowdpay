@@ -241,6 +241,9 @@ export const api = {
     request('GET', `/contributions/finalization/${txHash}`),
   failExpiredCampaigns: () => request('POST', '/campaigns/cron/fail-expired'),
   triggerCampaignRefunds: (campaignId) => request('POST', `/campaigns/${campaignId}/trigger-refunds`),
+  initiateRefund: (id) => request('POST', `/campaigns/${id}/refund/initiate`, {}),
+  approveRefundCreator: (id, body) => request('POST', `/campaigns/${id}/refund/approve/creator`, body || {}),
+  approveRefundPlatform: (id) => request('POST', `/campaigns/${id}/refund/approve/platform`, {}),
 
   getWithdrawalCapabilities: () => request('GET', '/withdrawals/capabilities'),
   listWithdrawals: (campaignId) =>
