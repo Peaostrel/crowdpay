@@ -291,34 +291,28 @@ export const api = {
   updateDispute: (id, body) => request("PATCH", `/disputes/${id}`, body),
   getDisputeEvents: (id) => request("GET", `/disputes/${id}/events`),
 
-  getAdminStats: () => request("GET", "/admin/stats"),
-  getAdminCampaigns: () => request("GET", "/admin/campaigns"),
-  getAdminMilestones: (options = {}) =>
-    request("GET", "/admin/milestones", null, { query: options }),
-  getAdminUsers: (include_banned = false) =>
-    request("GET", "/admin/users", null, {
-      query: { include_banned: include_banned ? "true" : "false" },
-    }),
-  getAdminAuditLog: (options = {}) =>
-    request("GET", "/admin/audit-log", null, { query: options }),
-  updateCampaignStatus: (id, status) =>
-    request("PATCH", `/admin/campaigns/${id}/status`, { status }),
-  adminSuspendCampaign: (id, body) =>
-    request("PATCH", `/admin/campaigns/${id}/suspend`, body),
-  adminRestoreCampaign: (id) =>
-    request("PATCH", `/admin/campaigns/${id}/restore`, {}),
-  adminDeleteCampaign: (id, body) =>
-    request("DELETE", `/admin/campaigns/${id}`, body),
-  adminBanUser: (id, body) => request("PATCH", `/admin/users/${id}/ban`, body),
-  adminUnbanUser: (id) => request("PATCH", `/admin/users/${id}/unban`, {}),
-  adminPromoteUser: (id) => request("PATCH", `/admin/users/${id}/promote`, {}),
-  adminDemoteUser: (id) => request("PATCH", `/admin/users/${id}/demote`, {}),
-  listApiKeys: () => request("GET", "/api-keys"),
-  createApiKey: (body) => request("POST", "/api-keys", body),
-  deleteApiKey: (id) => request("DELETE", `/api-keys/${id}`),
-  listWebhooks: () => request("GET", "/webhooks"),
-  createWebhook: (body) => request("POST", "/webhooks", body),
-  listWebhookDeliveries: (options = {}) =>
-    request("GET", "/webhooks/deliveries", null, { query: options }),
-  deleteWebhook: (id) => request("DELETE", `/webhooks/${id}`),
+  getAdminStats: () => request('GET', '/admin/stats'),
+  getAdminCampaigns: () => request('GET', '/admin/campaigns'),
+  getAdminMilestones: (options = {}) => request('GET', '/admin/milestones', null, { query: options }),
+  getAdminUsers: (include_banned = false) => request('GET', '/admin/users', null, { query: { include_banned: include_banned ? 'true' : 'false' } }),
+  getAdminAuditLog: (options = {}) => request('GET', '/admin/audit-log', null, { query: options }),
+  updateCampaignStatus: (id, status) => request('PATCH', `/admin/campaigns/${id}/status`, { status }),
+  adminSuspendCampaign: (id, body) => request('PATCH', `/admin/campaigns/${id}/suspend`, body),
+  adminRestoreCampaign: (id) => request('PATCH', `/admin/campaigns/${id}/restore`, {}),
+  adminDeleteCampaign: (id, body) => request('DELETE', `/admin/campaigns/${id}`, body),
+  adminBanUser: (id, body) => request('PATCH', `/admin/users/${id}/ban`, body),
+  adminUnbanUser: (id) => request('PATCH', `/admin/users/${id}/unban`, {}),
+  adminPromoteUser: (id) => request('PATCH', `/admin/users/${id}/promote`, {}),
+  adminDemoteUser: (id) => request('PATCH', `/admin/users/${id}/demote`, {}),
+  listApiKeys: () => request('GET', '/api-keys'),
+  createApiKey: (body) => request('POST', '/api-keys', body),
+  deleteApiKey: (id) => request('DELETE', `/api-keys/${id}`),
+  listWebhooks: () => request('GET', '/webhooks'),
+  createWebhook: (body) => request('POST', '/webhooks', body),
+  listWebhookDeliveries: (options = {}) => request('GET', '/webhooks/deliveries', null, { query: options }),
+  deleteWebhook: (id) => request('DELETE', `/webhooks/${id}`),
+
+  getNotifications: () => request('GET', '/notifications'),
+  markNotificationRead: (id) => request('PATCH', `/notifications/${id}/read`, {}),
+  markAllNotificationsRead: () => request('PATCH', '/notifications/read-all', {}),
 };

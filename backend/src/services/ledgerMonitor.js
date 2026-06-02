@@ -16,6 +16,7 @@ const {
   emitWebhookEventForUser,
   WEBHOOK_EVENTS,
 } = require("./webhookDispatcher");
+const { createNotification } = require("./notifications");
 
 /** wallet_public_key -> stream metadata */
 const streamRegistry = new Map();
@@ -375,6 +376,13 @@ async function handlePayment(campaignId, walletPublicKey, payment) {
         logger.error("Contribution webhook emit failed", { error: e.message }),
       );
 
+      createNotification(postCommitHooks.creatorId, {
+        type: 'contribution_received',
+        title: 'New contribution received',
+        body: `${postCommitHooks.contributionPayload.amount} ${postCommitHooks.contributionPayload.asset} received.`,
+        link: `/campaigns/${postCommitHooks.campaignId}`,
+      }).catch(() => {});
+
       if (postCommitHooks.fundedCampaign) {
         emitWebhookEventForUser(
           postCommitHooks.fundedCampaign.creator_id,
@@ -383,6 +391,13 @@ async function handlePayment(campaignId, walletPublicKey, payment) {
         ).catch((e) =>
           logger.error("Funded webhook emit failed", { error: e.message }),
         );
+
+        createNotification(postCommitHooks.fundedCampaign.creator_id, {
+          type: 'goal_reached',
+          title: 'Goal reached!',
+          body: `Your campaign "${postCommitHooks.fundedCampaign.title}" has reached its funding goal.`,
+          link: `/campaigns/${postCommitHooks.campaignId}`,
+        }).catch(() => {});
       }
     });
   }
