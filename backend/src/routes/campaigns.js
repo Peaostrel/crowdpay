@@ -802,6 +802,55 @@ router.post(
 );
 
 // Create campaign (authenticated)
+router.post('/', requireAuth, requireRole('creator', 'admin'), createCampaignValidation, validateRequest, asyncHandler(async (req, res) => {
+  /**
+   * @openapi
+   * /api/campaigns:
+   *   post:
+   *     tags: [Campaigns]
+   *     summary: Create campaign
+   *     security:
+   *       - bearerAuth: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required: [title, target_amount, asset_type]
+   *             properties:
+   *               title: { type: string }
+   *               description: { type: string, nullable: true }
+   *               target_amount: { type: string }
+   *               asset_type: { type: string }
+   *               deadline: { type: string, nullable: true }
+   *               milestones: { type: array, items: { type: object }, nullable: true }
+   *               min_contribution: { type: string, nullable: true }
+   *               max_contribution: { type: string, nullable: true }
+   *     responses:
+   *       201:
+   *         description: Created
+   *       401:
+   *         description: Unauthorized
+   *       403:
+   *         description: Forbidden
+   */
+  const { title, description, target_amount, asset_type, deadline, milestones, min_contribution, max_contribution, max_per_user } = req.body;
+
+  if (deadline) {
+    const [year, month, day] = String(deadline).split('-').map(Number);
+    const deadlineDate = new Date(year, month - 1, day);
+    const todayDate = new Date();
+    todayDate.setHours(0, 0, 0, 0);
+
+    if (
+      Number.isNaN(deadlineDate.getTime()) ||
+      deadlineDate.getFullYear() !== year ||
+      deadlineDate.getMonth() + 1 !== month ||
+      deadlineDate.getDate() !== day ||
+      deadlineDate < todayDate
+    ) {
+      return res.status(400).json({ error: 'deadline must be a future date' });
 router.post(
   "/",
   requireAuth,
@@ -913,8 +962,8 @@ router.post(
       const { rows } = await client.query(
         `INSERT INTO campaigns
          (title, description, target_amount, asset_type, wallet_public_key, creator_id, deadline, 
-          min_contribution, max_contribution, escrow_contract_id, milestones_contract_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          min_contribution, max_contribution, max_per_user, escrow_contract_id, milestones_contract_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING *`,
         [
           title,
