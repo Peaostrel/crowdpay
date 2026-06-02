@@ -22,6 +22,7 @@ const { startLedgerMonitor, getLedgerStreamHealth } = require('./services/ledger
 const { refreshActiveCampaignStatuses } = require('./services/campaignStatusService');
 const { sendAlert } = require('./services/alerting');
 const { assertNoLegacyPlaintextUserWalletSecrets } = require('./services/walletSecrets');
+const db = require('./config/database');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 const rateLimit = require('express-rate-limit');
@@ -104,7 +105,21 @@ app.use('/api/milestones', require('./routes/milestones'));
 app.use('/api', require('./routes/disputes'));
 app.use('/api/notifications', require('./routes/notifications'));
 
-app.get('/health', (_, res) => res.json({ status: 'ok' }));
+app.get('/health', async (_, res) => {
+  try {
+    await db.query('SELECT 1');
+    res.json({
+      status: 'ok',
+      db: {
+        total: db.totalCount,
+        idle: db.idleCount,
+        waiting: db.waitingCount,
+      },
+    });
+  } catch (err) {
+    res.status(503).json({ status: 'error', error: err.message });
+  }
+});
 app.get('/api/config', (_, res) =>
   res.json({ platform_fee_bps: parseInt(process.env.PLATFORM_FEE_BPS || '0', 10) })
 );
